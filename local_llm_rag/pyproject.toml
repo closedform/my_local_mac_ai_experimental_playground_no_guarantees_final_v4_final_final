@@ -1,0 +1,28 @@
+[project]
+name = "local-llm-rag"
+version = "0.1.0"
+description = "Local LLM reasoning + RAG stack for Mac Studio (Aug 2025)"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "weaviate-client>=4.16",
+    "langchain>=0.3",
+    "langchain-ollama>=0.2",
+    "ollama>=0.3",
+    "unstructured>=0.15",
+    "nbformat>=5.10",
+    "python-magic>=0.4",
+    "tqdm>=4.66",
+    "pydantic>=2",
+    "sqlite-utils>=3.36",
+    "ipywidgets>=8",
+    "jupyterlab>=4.2",
+]
+
+[tool.uv]
+# Create and use an in-project virtual environment at .venv
+# (optional; uv can also run without activation via `uv run`)
+venv = ".venv"
+
+[tool.uv.sources]
+# Empty; add private indexes here if needed
