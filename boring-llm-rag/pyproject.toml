@@ -1,7 +1,7 @@
 [project]
 name = "local-llm-rag"
 version = "0.1.0"
-description = "Local LLM reasoning + RAG stack"
+description = "Local LLM reasoning + RAG stack for Mac Studio (Aug 2025)"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -17,5 +17,6 @@ dependencies = [
     "sqlite-utils>=3.36",
     "ipywidgets>=8",
     "jupyterlab>=4.2",
-    "docker>=7.0.0",
 ]
+
+[tool.uv]

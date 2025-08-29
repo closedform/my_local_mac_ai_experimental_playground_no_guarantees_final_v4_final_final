@@ -1,77 +1,46 @@
-# RAG Indexing Service (Recursive Discovery, Smart Chunking, Summaries, Metadata, Dedup)
+# RAG Indexing Service
 
-This build adds:
-- **Recursive** folder discovery
-- **Smart parsing & chunking** (PDFs, code, docs)
-- **Notebook ingestion** (`.ipynb`) and **Mathematica** (`.nb`) export
-- **Per-file summaries & metadata** (local model)
-- **Exact dedup** by SHA-256; near-dup ready
-- **Weaviate** storage with **local embeddings** via Ollama
+Ingest files into `TheBrain` (a Weaviate collection) with local embeddings.
 
-> Prereqs: infra from `01_infrastructure_setup.md` is up (Ollama + Weaviate + venv).
+- Recursive discovery
+- Parsing and chunking
+- Per-file summaries and metadata
+- Duplicate detection via SHA-256
+- Weaviate storage with Ollama embeddings
 
----
+> Prereqs: `ollama serve` and `make awaken_hive`.
 
-## 1) Helpers for notebooks / Mathematica
-
-`scripts/utils_ipynb_nb.py` handles:
-- extracting Markdown + code from `.ipynb`
-- exporting Mathematica `.nb` to Markdown via `wolframscript` (if available), else metadata-only
-
----
-
-## 2) Ingest script
-
-`scripts/ingest.py`:
-- Recursively discovers files under `INGEST_DIR`
-- Parses & **chunk_by_title** chunks (Unstructured) for PDFs/Office/code
-- Handles `.ipynb` (via `nbformat`) and `.nb` (via `wolframscript` export)
-- Writes **summaries/metadata** with your local model (Ollama)
-- Stores objects in Weaviate with **Ollama embeddings**
-- Skips **exact duplicates** by SHA-256 (adds a pointer entry)
-
-Run:
+## 1) Ingest Script
 
 ```bash
-export INGEST_DIR="/path/to/folder"
-export WEAVIATE_HOST="http://localhost:8080"
-export OLLAMA_ENDPOINT="http://localhost:11434"
-export WEAVIATE_COLLECTION="Docs"
-export EMBED_MODEL="bge-m3"
-export SUMMARY_MODEL="qwen3:14b"
-
-python scripts/ingest.py
+make ingest INGEST_DIR="/path/to/your/docs"
 ```
 
----
+Defaults (override via env):
+- `WEAVIATE_COLLECTION="TheBrain"`
+- `EMBED_MODEL="bge-m3"`
+- `SUMMARY_MODEL="qwen3:14b"`
 
-## 3) RAG querying
-
-`scripts/rag_query.py` performs a semantic search in Weaviate and composes an answer with your chosen local model.
-
-Examples:
+## 2) RAG Querying (CLI)
 
 ```bash
-python scripts/rag_query.py "List near-duplicate README sections and propose a merge"
-python scripts/rag_query.py "Create an index of notebooks and summarize each"
+make ask QUERY="Based on TheBrain, what are the primary project goals?"
 ```
 
-You can set:
-- `WEAVIATE_HOST` (default `http://localhost:8080`)
-- `WEAVIATE_COLLECTION` (default `Docs`)
-- `GEN_MODEL` (default `qwen3:14b`)
-- `TOPK` (default `8`)
+## 3) RAG Querying (Notebook)
 
----
+```python
+from hivemind import HiveMind
 
-## 4) Near-duplicate flow (optional)
+hive = HiveMind()
+hive.add_drone(
+    name="Cortex",
+    model="qwen3:14b",
+    persona="You are a senior systems architect focused on robust, scalable infrastructure."
+)
 
-- For each chunk, query top-N neighbors and group by cosine similarity threshold (e.g., ≥ 0.92).
-- Feed cluster exemplars to the LLM (via `rag_query.py`) to propose a **merge plan** (keep newest, collapse duplicates, apply tags).
-
----
-
-## 5) Notes
-
-- Unsupported/binary files get **metadata stubs** so they remain discoverable and can be included in folder overviews.
-- Adjust Unstructured `chunk_by_title` parameters for larger or smaller chunks.
+hive.brainscan(
+    drone_name="Cortex",
+    query="Based on the documents I provided, what are the key security concerns for the project?"
+)
+```
